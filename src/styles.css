@@ -575,6 +575,12 @@ h3 {
   display: none;
 }
 
+.danger-zone {
+  border: 1px solid rgba(239, 68, 68, 0.36);
+  border-radius: 8px;
+  padding: 10px;
+}
+
 .inline-form {
   display: grid;
   gap: 8px;

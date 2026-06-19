@@ -291,6 +291,15 @@ export function deleteExpense(state, expenseId, now = new Date()) {
   state.expenses = state.expenses.filter((item) => item.id !== expenseId);
 }
 
+export function deleteExpensesForMonth(state, monthKey, now = new Date()) {
+  const ids = state.expenses
+    .filter((expense) => monthKeyFromDate(expense.date) === monthKey)
+    .map((expense) => expense.id);
+
+  ids.forEach((expenseId) => deleteExpense(state, expenseId, now));
+  return { deleted: ids.length };
+}
+
 export function ensureMonthlyFixedForMonth(state, monthKey, now = new Date()) {
   const fixedActive = state.fixedExpenses.filter((fixed) => fixed.active);
   fixedActive.forEach((fixed) => {

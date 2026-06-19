@@ -9,6 +9,7 @@ import {
   dateInputValue,
   deactivateFixedExpense,
   deleteExpense,
+  deleteExpensesForMonth,
   ensureMonthlyFixedForMonth,
   exportBackupJSON,
   exportExpensesCSV,
@@ -30,8 +31,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js?v=6";
-import { loadState, replaceState, saveState } from "./storage.js?v=6";
+} from "./domain.js?v=7";
+import { loadState, replaceState, saveState } from "./storage.js?v=7";
 
 let state = loadState();
 
@@ -50,6 +51,7 @@ const ui = {
   expenseSort: "desc",
   fixedMonthKey: currentMonth,
   fixedStatus: "all",
+  settingsDeleteMonthKey: currentMonth,
   modal: null
 };
 
@@ -367,6 +369,13 @@ function renderSettings() {
         <label class="button button--secondary" for="import-csv">Importar CSV</label>
         <input class="file-input" id="import-csv" type="file" accept=".csv,text/csv" />
         <button class="button button--danger" type="button" id="clear-variable-expenses">Borrar gastos variables</button>
+        <form id="clear-month-expenses-form" class="stack danger-zone">
+          <label class="field">
+            <span>Mes a borrar</span>
+            <input class="input" name="monthKey" type="month" value="${escapeHtml(ui.settingsDeleteMonthKey)}" required />
+          </label>
+          <button class="button button--danger" type="submit">Borrar gastos de ese mes</button>
+        </form>
         <button class="button button--secondary" type="button" id="export-backup">Backup local JSON</button>
         <label class="button button--warning" for="import-backup">Importar backup</label>
         <input class="file-input" id="import-backup" type="file" accept=".json,application/json" />
@@ -682,6 +691,21 @@ function bindSettingsEvents() {
     state.expenses = state.expenses.filter((expense) => expense.type !== EXPENSE_TYPES.variable);
     const removed = before - state.expenses.length;
     persist(`${removed} gastos variables borrados`);
+  });
+
+  document.querySelector("#clear-month-expenses-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(event.currentTarget));
+    const monthKey = String(data.monthKey || "");
+    ui.settingsDeleteMonthKey = monthKey;
+    if (!/^\d{4}-\d{2}$/.test(monthKey)) {
+      showToast("Elegí un mes válido");
+      return;
+    }
+    const label = monthLabel(monthKey);
+    if (!confirm(`¿Borrar todos los gastos de ${label}? Los fijos pagados de ese mes vuelven a pendiente.`)) return;
+    const result = deleteExpensesForMonth(state, monthKey);
+    persist(`${result.deleted} gastos borrados de ${label}`);
   });
 
   document.querySelector("#import-csv")?.addEventListener("change", async (event) => {

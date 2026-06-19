@@ -8,6 +8,7 @@ import {
   deactivateFixedExpense,
   deleteCategoryWithReassignment,
   deleteExpense,
+  deleteExpensesForMonth,
   emptyState,
   ensureCategory,
   ensureMonthlyFixedForMonth,
@@ -203,4 +204,39 @@ test("borrar gasto fijo pagado vuelve el mensual a pendiente", () => {
 
   assert.equal(findById(state.monthlyFixedExpenses, monthly.id).status, MONTHLY_FIXED_STATUSES.pending);
   assert.equal(state.expenses.length, 0);
+});
+
+test("borrar gastos de un mes elimina por fecha real y resetea fijos pagados", () => {
+  const state = makeState();
+  const comida = state.categories.find((category) => category.name === "Comida");
+  const monthly = state.monthlyFixedExpenses.find((item) => item.nameSnapshot === "Spotify");
+
+  addVariableExpense(
+    state,
+    {
+      name: "Almuerzo",
+      amountCents: 120000,
+      categoryId: comida.id,
+      date: "2026-06-12"
+    },
+    "2026-06-19T12:00:00.000Z"
+  );
+  addVariableExpense(
+    state,
+    {
+      name: "Cena mayo",
+      amountCents: 150000,
+      categoryId: comida.id,
+      date: "2026-05-30"
+    },
+    "2026-06-19T12:00:00.000Z"
+  );
+  payMonthlyFixedExpense(state, monthly.id, 350000, "2026-06-05", "2026-06-05T12:00:00.000Z");
+
+  const result = deleteExpensesForMonth(state, "2026-06", "2026-06-20T12:00:00.000Z");
+
+  assert.equal(result.deleted, 2);
+  assert.equal(state.expenses.length, 1);
+  assert.equal(state.expenses[0].name, "Cena mayo");
+  assert.equal(findById(state.monthlyFixedExpenses, monthly.id).status, MONTHLY_FIXED_STATUSES.pending);
 });
