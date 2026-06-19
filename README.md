@@ -40,3 +40,7 @@ Supermercado,Comida,19/6/2026,89000
 ```
 
 La fecha debe estar en formato `día/mes/año`, por ejemplo `1/3/2026`. Los importados entran como gastos variables.
+
+El monto puede venir como `5500`, `5,500.00` o `5.500,00`. Si el CSV trae columnas extra después de `Monto`, se ignoran. Las filas con monto `0` se saltean.
+
+Si importaste mal un CSV, usá `Configuración > Borrar gastos variables` y volvé a importarlo.

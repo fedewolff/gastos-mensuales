@@ -555,10 +555,16 @@ export function importExpensesCSV(state, text, now = new Date()) {
   }
 
   let imported = 0;
+  let skipped = 0;
   rows.slice(1).forEach((row, index) => {
     const [name, categoryName, date, amount] = row;
     if (!String(name || "").trim()) {
       throw new Error(`Fila ${index + 2}: falta el nombre.`);
+    }
+    const amountCents = parseAmountToCents(amount);
+    if (amountCents <= 0) {
+      skipped += 1;
+      return;
     }
     const category = ensureCategory(state, categoryName, now);
     addVariableExpense(
@@ -567,14 +573,14 @@ export function importExpensesCSV(state, text, now = new Date()) {
         name,
         categoryId: category.id,
         date: normalizeDateInput(date),
-        amountCents: parseAmountToCents(amount)
+        amountCents
       },
       now
     );
     imported += 1;
   });
 
-  return { imported };
+  return { imported, skipped };
 }
 
 export function exportBackupJSON(state, now = new Date()) {
@@ -597,10 +603,50 @@ export function importBackupJSON(text) {
 }
 
 export function parseAmountToCents(value) {
-  const digits = String(value || "").replace(/[^\d]/g, "");
-  const pesos = Number(digits);
+  let text = String(value || "").trim();
+  if (!text) return 0;
+
+  text = text.replace(/[^\d,.-]/g, "");
+  const negative = text.startsWith("-");
+  text = text.replace(/-/g, "");
+
+  const lastComma = text.lastIndexOf(",");
+  const lastDot = text.lastIndexOf(".");
+  const decimalSeparator = inferDecimalSeparator(text, lastComma, lastDot);
+
+  let normalized = text;
+  if (decimalSeparator) {
+    const decimalIndex = text.lastIndexOf(decimalSeparator);
+    const integerPart = text.slice(0, decimalIndex).replace(/[.,]/g, "");
+    const decimalPart = text.slice(decimalIndex + 1).replace(/[^\d]/g, "").slice(0, 2).padEnd(2, "0");
+    normalized = `${integerPart}.${decimalPart}`;
+  } else {
+    normalized = text.replace(/[.,]/g, "");
+  }
+
+  const pesos = Number(normalized);
   if (!Number.isFinite(pesos) || pesos <= 0) return 0;
-  return pesos * 100;
+  return Math.round(pesos * 100) * (negative ? -1 : 1);
+}
+
+function inferDecimalSeparator(text, lastComma, lastDot) {
+  if (lastComma !== -1 && lastDot !== -1) {
+    return lastComma > lastDot ? "," : ".";
+  }
+
+  const separator = lastComma !== -1 ? "," : lastDot !== -1 ? "." : null;
+  if (!separator) return null;
+
+  const lastSeparator = text.lastIndexOf(separator);
+  const separatorCount = text.split(separator).length - 1;
+  const digitsAfter = text.length - lastSeparator - 1;
+
+  if (digitsAfter === 0) return null;
+  if (digitsAfter <= 2) return separator;
+  if (digitsAfter === 3) return null;
+  if (separatorCount > 1) return null;
+
+  return null;
 }
 
 export function formatARS(amountCents) {

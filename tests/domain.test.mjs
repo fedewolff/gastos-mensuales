@@ -14,6 +14,7 @@ import {
   exportExpensesCSV,
   findById,
   importExpensesCSV,
+  parseAmountToCents,
   payMonthlyFixedExpense,
   seedState,
   skipMonthlyFixedExpense
@@ -123,6 +124,35 @@ test("import CSV crea gastos variables y acepta fecha día/mes/año", () => {
   assert.equal(state.expenses.find((expense) => expense.name === "Café").date, "2026-03-01");
   const mpExpense = state.expenses.find((expense) => expense.name === "Plata MercadoPago");
   assert.equal(findById(state.categories, mpExpense.categoryId).name, "Convivencia");
+});
+
+test("parsea montos con separadores de miles y decimales", () => {
+  assert.equal(parseAmountToCents("5,500.00"), 550000);
+  assert.equal(parseAmountToCents("31,500.00"), 3150000);
+  assert.equal(parseAmountToCents("2,200,000.00"), 220000000);
+  assert.equal(parseAmountToCents("31.500,00"), 3150000);
+  assert.equal(parseAmountToCents("31.500"), 3150000);
+  assert.equal(parseAmountToCents("31500"), 3150000);
+});
+
+test("importa el formato del CSV de Finanzas Personales", () => {
+  const state = makeState();
+  const csv = [
+    "Nombre,Categoria,Fecha,Monto,,SUM de Monto",
+    'Café,Comida,1/3/2026,"5,500.00",,"13,441,973.00"',
+    'Cena,Comida,1/3/2026,"31,500.00",,',
+    'Auto,Transporte,1/5/2026,"2,200,000.00",,',
+    '[Fijo] Pago TC,Otro,1/4/2026,0.00,,'
+  ].join("\n");
+
+  const result = importExpensesCSV(state, csv, "2026-06-19T12:00:00.000Z");
+  const reportMarch = buildMonthlyReport(state, "2026-03", "2026-06-19T12:00:00.000Z");
+  const reportMay = buildMonthlyReport(state, "2026-05", "2026-06-19T12:00:00.000Z");
+
+  assert.equal(result.imported, 3);
+  assert.equal(result.skipped, 1);
+  assert.equal(reportMarch.totalCents, 3700000);
+  assert.equal(reportMay.totalCents, 220000000);
 });
 
 test("export CSV escribe fechas como día/mes/año", () => {

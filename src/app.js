@@ -30,8 +30,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js?v=5";
-import { loadState, replaceState, saveState } from "./storage.js?v=5";
+} from "./domain.js?v=6";
+import { loadState, replaceState, saveState } from "./storage.js?v=6";
 
 let state = loadState();
 
@@ -366,6 +366,7 @@ function renderSettings() {
         <button class="button" type="button" id="export-csv">Exportar gastos CSV</button>
         <label class="button button--secondary" for="import-csv">Importar CSV</label>
         <input class="file-input" id="import-csv" type="file" accept=".csv,text/csv" />
+        <button class="button button--danger" type="button" id="clear-variable-expenses">Borrar gastos variables</button>
         <button class="button button--secondary" type="button" id="export-backup">Backup local JSON</button>
         <label class="button button--warning" for="import-backup">Importar backup</label>
         <input class="file-input" id="import-backup" type="file" accept=".json,application/json" />
@@ -675,13 +676,22 @@ function bindSettingsEvents() {
     showToast("Backup exportado");
   });
 
+  document.querySelector("#clear-variable-expenses")?.addEventListener("click", () => {
+    if (!confirm("¿Borrar todos los gastos variables? Los gastos fijos y su configuración no se eliminan.")) return;
+    const before = state.expenses.length;
+    state.expenses = state.expenses.filter((expense) => expense.type !== EXPENSE_TYPES.variable);
+    const removed = before - state.expenses.length;
+    persist(`${removed} gastos variables borrados`);
+  });
+
   document.querySelector("#import-csv")?.addEventListener("change", async (event) => {
     const file = event.currentTarget.files?.[0];
     if (!file) return;
     withErrorAsync(async () => {
       const text = await file.text();
       const result = importExpensesCSV(state, text);
-      persist(`${result.imported} gastos importados`);
+      const skippedText = result.skipped ? `, ${result.skipped} con monto 0 salteados` : "";
+      persist(`${result.imported} gastos importados${skippedText}`);
     });
   });
 
