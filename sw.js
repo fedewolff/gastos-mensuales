@@ -1,12 +1,14 @@
-const CACHE_NAME = "gastos-mensuales-v3";
+const CACHE_NAME = "gastos-mensuales-v4";
 const ASSETS = [
   "./",
   "./index.html",
+  "./index.html?v=4",
   "./manifest.webmanifest",
-  "./src/app.js",
-  "./src/domain.js",
-  "./src/storage.js",
-  "./src/styles.css",
+  "./manifest.webmanifest?v=4",
+  "./src/app.js?v=4",
+  "./src/domain.js?v=4",
+  "./src/storage.js?v=4",
+  "./src/styles.css?v=4",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
@@ -29,14 +31,34 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const freshFirst =
+    event.request.mode === "navigate" ||
+    ["document", "script", "style", "manifest"].includes(event.request.destination);
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
-    })
+    freshFirst ? networkFirst(event.request) : cacheFirst(event.request)
   );
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(new Request(request, { cache: "reload" }));
+    cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, response.clone());
+  return response;
+}

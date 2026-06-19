@@ -30,8 +30,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js";
-import { loadState, replaceState, saveState } from "./storage.js";
+} from "./domain.js?v=4";
+import { loadState, replaceState, saveState } from "./storage.js?v=4";
 
 let state = loadState();
 
@@ -214,7 +214,12 @@ function renderSummary() {
       ${metric("Fijos pagados", formatARS(report.fixedPaidCents), `${report.fixed.paidCount} de ${report.fixed.total} fijos`)}
     </section>
     <section class="section card">
-      <h2>Evolución mensual</h2>
+      <div class="section-heading">
+        <div>
+          <h2>Gasto mes a mes</h2>
+          <p class="muted">Evolución de los últimos 6 meses.</p>
+        </div>
+      </div>
       ${renderMonthlyLineChart(monthlyTrend)}
     </section>
     <section class="section card">
@@ -829,25 +834,33 @@ function monthlyTrendData(selectedMonthKey) {
 
 function renderMonthlyLineChart(data) {
   const width = 320;
-  const height = 150;
+  const height = 180;
   const paddingX = 18;
-  const paddingY = 20;
+  const paddingTop = 18;
+  const paddingBottom = 34;
   const plotWidth = width - paddingX * 2;
-  const plotHeight = height - paddingY * 2;
+  const plotHeight = height - paddingTop - paddingBottom;
   const maxAmount = Math.max(1, ...data.map((item) => item.amountCents));
   const step = plotWidth / Math.max(1, data.length - 1);
   const points = data.map((item, index) => {
     const x = paddingX + index * step;
-    const y = height - paddingY - (item.amountCents / maxAmount) * plotHeight;
+    const y = height - paddingBottom - (item.amountCents / maxAmount) * plotHeight;
     return { ...item, x, y };
   });
   const path = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
-  const area = `${paddingX},${height - paddingY} ${path} ${width - paddingX},${height - paddingY}`;
+  const area = `${paddingX},${height - paddingBottom} ${path} ${width - paddingX},${height - paddingBottom}`;
+  const lastPoint = points[points.length - 1];
 
   return `
     <div class="line-chart">
+      <div class="line-chart__total">
+        <span>Mes seleccionado</span>
+        <strong>${formatARS(lastPoint.amountCents)}</strong>
+      </div>
       <svg class="line-chart__svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolución mensual de gastos">
-        <line class="line-chart__axis" x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}"></line>
+        <line class="line-chart__grid" x1="${paddingX}" y1="${paddingTop}" x2="${width - paddingX}" y2="${paddingTop}"></line>
+        <line class="line-chart__grid" x1="${paddingX}" y1="${paddingTop + plotHeight / 2}" x2="${width - paddingX}" y2="${paddingTop + plotHeight / 2}"></line>
+        <line class="line-chart__axis" x1="${paddingX}" y1="${height - paddingBottom}" x2="${width - paddingX}" y2="${height - paddingBottom}"></line>
         <polygon class="line-chart__area" points="${area}"></polygon>
         <polyline class="line-chart__line" points="${path}"></polyline>
         ${points
@@ -856,6 +869,13 @@ function renderMonthlyLineChart(data) {
               <circle class="line-chart__dot" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4">
                 <title>${escapeHtml(point.label)}: ${formatARS(point.amountCents)}</title>
               </circle>
+            `
+          )
+          .join("")}
+        ${points
+          .map(
+            (point) => `
+              <text class="line-chart__month" x="${point.x.toFixed(1)}" y="${height - 9}" text-anchor="middle">${escapeHtml(point.label)}</text>
             `
           )
           .join("")}
