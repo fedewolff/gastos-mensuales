@@ -1,16 +1,17 @@
 :root {
   color-scheme: dark;
-  --bg: #0b0b0d;
-  --surface: #161616;
-  --surface-2: #202020;
-  --border: #303030;
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
-  --accent: #22c55e;
-  --accent-strong: #16a34a;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #38bdf8;
+  --bg: #0c0c11;
+  --surface: #17171f;
+  --surface-2: #232330;
+  --border: #363645;
+  --text: #f7f7fb;
+  --muted: #aaaabc;
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --accent-rgb: 56, 189, 248;
+  --warning: #fbbf24;
+  --danger: #f43f5e;
+  --info: #67e8f9;
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
@@ -185,7 +186,7 @@ h3 {
 .input:focus,
 .select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
 }
 
 .input--amount {
@@ -210,7 +211,7 @@ h3 {
   background: var(--accent);
   border: 0;
   border-radius: 8px;
-  color: #04130a;
+  color: #03131c;
   cursor: pointer;
   display: inline-flex;
   font-weight: 800;
@@ -242,7 +243,7 @@ h3 {
 
 .button--warning {
   background: var(--warning);
-  color: #1a1000;
+  color: #211600;
 }
 
 .button--small {
@@ -276,7 +277,7 @@ h3 {
 
 .segmented button.is-active {
   background: var(--accent);
-  color: #04130a;
+  color: #03131c;
   font-weight: 800;
 }
 
@@ -349,13 +350,13 @@ h3 {
 }
 
 .badge--pending {
-  background: rgba(245, 158, 11, 0.16);
-  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.16);
+  color: #fde68a;
 }
 
 .badge--paid {
-  background: rgba(34, 197, 94, 0.16);
-  color: #4ade80;
+  background: rgba(var(--accent-rgb), 0.16);
+  color: #7dd3fc;
 }
 
 .badge--skipped {
@@ -440,7 +441,7 @@ h3 {
 }
 
 .line-chart__area {
-  fill: rgba(34, 197, 94, 0.11);
+  fill: rgba(var(--accent-rgb), 0.13);
   stroke: none;
 }
 
@@ -496,7 +497,7 @@ h3 {
 }
 
 .tabbar {
-  background: rgba(11, 11, 13, 0.92);
+  background: rgba(12, 12, 17, 0.94);
   border-top: 1px solid var(--border);
   bottom: 0;
   display: grid;
@@ -521,7 +522,7 @@ h3 {
 }
 
 .tabbar__item.is-active {
-  background: var(--surface-2);
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
 }
 
@@ -530,7 +531,7 @@ h3 {
   border-radius: 8px;
   bottom: 78px;
   box-shadow: var(--shadow);
-  color: #0b0b0d;
+  color: var(--bg);
   font-weight: 800;
   left: 14px;
   opacity: 0;
@@ -591,7 +592,7 @@ h3 {
 }
 
 .danger-zone {
-  border: 1px solid rgba(239, 68, 68, 0.36);
+  border: 1px solid rgba(244, 63, 94, 0.36);
   border-radius: 8px;
   padding: 10px;
 }
@@ -603,7 +604,7 @@ h3 {
 }
 
 .danger-text {
-  color: #fca5a5;
+  color: #fb7185;
 }
 
 .muted {

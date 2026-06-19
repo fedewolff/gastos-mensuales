@@ -31,8 +31,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js?v=10";
-import { loadState, replaceState, restorePreviousState, saveState } from "./storage.js?v=10";
+} from "./domain.js?v=11";
+import { loadState, replaceState, restorePreviousState, saveState } from "./storage.js?v=11";
 
 let state = loadState();
 
