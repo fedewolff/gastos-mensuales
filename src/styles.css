@@ -118,7 +118,7 @@ h3 {
   max-width: 820px;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  padding-bottom: 88px;
   width: 100%;
 }
 
@@ -503,7 +503,7 @@ h3 {
   gap: 4px;
   grid-template-columns: repeat(5, 1fr);
   left: 0;
-  padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+  padding: 8px;
   position: fixed;
   right: 0;
   transform: translateZ(0);
@@ -528,7 +528,7 @@ h3 {
 .toast {
   background: var(--text);
   border-radius: 8px;
-  bottom: calc(86px + env(safe-area-inset-bottom));
+  bottom: 78px;
   box-shadow: var(--shadow);
   color: #0b0b0d;
   font-weight: 800;
