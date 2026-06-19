@@ -1,14 +1,14 @@
-const CACHE_NAME = "gastos-mensuales-v7";
+const CACHE_NAME = "gastos-mensuales-v8";
 const ASSETS = [
   "./",
   "./index.html",
-  "./index.html?v=7",
+  "./index.html?v=8",
   "./manifest.webmanifest",
-  "./manifest.webmanifest?v=7",
-  "./src/app.js?v=7",
-  "./src/domain.js?v=7",
-  "./src/storage.js?v=7",
-  "./src/styles.css?v=7",
+  "./manifest.webmanifest?v=8",
+  "./src/app.js?v=8",
+  "./src/domain.js?v=8",
+  "./src/storage.js?v=8",
+  "./src/styles.css?v=8",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"

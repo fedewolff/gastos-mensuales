@@ -31,8 +31,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js?v=7";
-import { loadState, replaceState, saveState } from "./storage.js?v=7";
+} from "./domain.js?v=8";
+import { loadState, replaceState, restorePreviousState, saveState } from "./storage.js?v=8";
 
 let state = loadState();
 
@@ -377,6 +377,7 @@ function renderSettings() {
           <button class="button button--danger" type="submit">Borrar gastos de ese mes</button>
         </form>
         <button class="button button--secondary" type="button" id="export-backup">Backup local JSON</button>
+        <button class="button button--warning" type="button" id="restore-previous-state">Restaurar último autoguardado</button>
         <label class="button button--warning" for="import-backup">Importar backup</label>
         <input class="file-input" id="import-backup" type="file" accept=".json,application/json" />
       </div>
@@ -683,6 +684,17 @@ function bindSettingsEvents() {
   document.querySelector("#export-backup")?.addEventListener("click", () => {
     downloadFile(`backup-gastos-${dateInputValue()}.json`, exportBackupJSON(state), "application/json;charset=utf-8");
     showToast("Backup exportado");
+  });
+
+  document.querySelector("#restore-previous-state")?.addEventListener("click", () => {
+    if (!confirm("¿Restaurar el último autoguardado local? Esto reemplaza el estado actual.")) return;
+    withError(() => {
+      state = restorePreviousState();
+      ensureMonth(currentMonthKey());
+      saveState(state);
+      render();
+      showToast("Autoguardado restaurado");
+    });
   });
 
   document.querySelector("#clear-variable-expenses")?.addEventListener("click", () => {
