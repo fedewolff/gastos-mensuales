@@ -36,7 +36,7 @@ El CSV debe tener estas columnas en este orden:
 
 ```csv
 Nombre,Categoria,Fecha,Monto
-Supermercado,Comida,2026-06-19,89000
+Supermercado,Comida,19/6/2026,89000
 ```
 
-La fecha debe estar en formato `yyyy-mm-dd`. Los importados entran como gastos variables.
+La fecha debe estar en formato `día/mes/año`, por ejemplo `1/3/2026`. Los importados entran como gastos variables.

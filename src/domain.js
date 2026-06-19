@@ -537,7 +537,7 @@ export function exportExpensesCSV(state) {
       rows.push([
         expense.name,
         getCategoryName(state, expense.categoryId),
-        expense.date,
+        formatDateForCSV(expense.date),
         String(Math.round(expense.amountCents / 100))
       ]);
     });
@@ -629,14 +629,17 @@ export function dateForMonth(monthKey) {
 
 export function normalizeDateInput(value) {
   const text = String(value || "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-    throw new Error("La fecha debe tener formato yyyy-mm-dd.");
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return validDateOrThrow(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
   }
-  const parsed = new Date(`${text}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) {
-    throw new Error("La fecha no es válida.");
+
+  const dayFirstMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dayFirstMatch) {
+    return validDateOrThrow(Number(dayFirstMatch[3]), Number(dayFirstMatch[2]), Number(dayFirstMatch[1]));
   }
-  return text;
+
+  throw new Error("La fecha debe tener formato d/m/aaaa, por ejemplo 1/3/2026.");
 }
 
 export function monthKeyFromDate(value) {
@@ -721,6 +724,25 @@ function csvEscape(value) {
 
 function monthlyFixedUniqueKey(fixedExpenseId, monthKey) {
   return `${fixedExpenseId}:${monthKey}`;
+}
+
+function validDateOrThrow(year, month, day) {
+  const parsed = new Date(year, month - 1, day, 12);
+  const isValid =
+    parsed.getFullYear() === year &&
+    parsed.getMonth() === month - 1 &&
+    parsed.getDate() === day;
+
+  if (!isValid) {
+    throw new Error("La fecha no es válida.");
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatDateForCSV(value) {
+  const [year, month, day] = normalizeDateInput(value).split("-");
+  return `${Number(day)}/${Number(month)}/${year}`;
 }
 
 function sum(values) {

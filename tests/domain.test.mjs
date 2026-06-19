@@ -11,6 +11,7 @@ import {
   emptyState,
   ensureCategory,
   ensureMonthlyFixedForMonth,
+  exportExpensesCSV,
   findById,
   importExpensesCSV,
   payMonthlyFixedExpense,
@@ -111,16 +112,35 @@ test("reportes usan date del gasto y no createdAt", () => {
   assert.equal(buildMonthlyReport(state, "2026-05", "2026-06-19T12:00:00.000Z").totalCents, 100000);
 });
 
-test("import CSV crea gastos variables y respeta columnas", () => {
+test("import CSV crea gastos variables y acepta fecha día/mes/año", () => {
   const state = makeState();
-  const csv = "Nombre,Categoria,Fecha,Monto\nCafé,Comida,2026-06-10,2500\nPlata MercadoPago,Plata MercadoPago,2026-06-11,10000";
+  const csv = "Nombre,Categoria,Fecha,Monto\nCafé,Comida,1/3/2026,2500\nPlata MercadoPago,Plata MercadoPago,11/6/2026,10000";
 
   const result = importExpensesCSV(state, csv, "2026-06-19T12:00:00.000Z");
 
   assert.equal(result.imported, 2);
   assert.equal(state.expenses.every((expense) => expense.type === EXPENSE_TYPES.variable), true);
+  assert.equal(state.expenses.find((expense) => expense.name === "Café").date, "2026-03-01");
   const mpExpense = state.expenses.find((expense) => expense.name === "Plata MercadoPago");
   assert.equal(findById(state.categories, mpExpense.categoryId).name, "Convivencia");
+});
+
+test("export CSV escribe fechas como día/mes/año", () => {
+  const state = makeState();
+  const comida = state.categories.find((category) => category.name === "Comida");
+
+  addVariableExpense(
+    state,
+    {
+      name: "Panadería",
+      amountCents: 420000,
+      categoryId: comida.id,
+      date: "2026-03-01"
+    },
+    "2026-06-19T12:00:00.000Z"
+  );
+
+  assert.match(exportExpensesCSV(state), /Panadería,Comida,1\/3\/2026,4200/);
 });
 
 test("borrar categoría exige reasignación y preserva datos", () => {
