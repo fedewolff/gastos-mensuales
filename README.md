@@ -2,6 +2,10 @@
 
 Webapp personal para registrar gastos rápido desde iPhone, con gastos fijos mensuales, reportes, CSV y backup local.
 
+## App publicada
+
+https://fedewolff.github.io/gastos-mensuales/
+
 ## Correr local
 
 ```bash
