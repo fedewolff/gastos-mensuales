@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Gastos" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Gastos Mensuales</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div id="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Gastos Mensuales</p>
+          <h1 id="screen-title">Carga rápida</h1>
+        </div>
+      </header>
+
+      <main id="app" class="screen" aria-live="polite"></main>
+
+      <nav class="tabbar" aria-label="Secciones">
+        <button class="tabbar__item is-active" type="button" data-nav="home">Cargar</button>
+        <button class="tabbar__item" type="button" data-nav="summary">Resumen</button>
+        <button class="tabbar__item" type="button" data-nav="expenses">Gastos</button>
+        <button class="tabbar__item" type="button" data-nav="fixed">Fijos</button>
+        <button class="tabbar__item" type="button" data-nav="settings">Config</button>
+      </nav>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
