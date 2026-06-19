@@ -21,15 +21,17 @@
 
 html,
 body {
+  height: 100%;
   margin: 0;
   min-height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
 }
 
 body {
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 button,
@@ -43,16 +45,22 @@ button {
 }
 
 #app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   min-height: 100svh;
-  padding: max(14px, env(safe-area-inset-top)) 14px calc(92px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding: max(14px, env(safe-area-inset-top)) 14px 0;
 }
 
 .topbar {
   align-items: end;
   display: flex;
+  flex: 0 0 auto;
   justify-content: space-between;
   margin: 4px auto 14px;
   max-width: 820px;
+  width: 100%;
 }
 
 .eyebrow {
@@ -104,8 +112,14 @@ h3 {
 }
 
 .screen {
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
   margin: 0 auto;
   max-width: 820px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  width: 100%;
 }
 
 .stack {
@@ -492,6 +506,7 @@ h3 {
   padding: 8px 8px max(8px, env(safe-area-inset-bottom));
   position: fixed;
   right: 0;
+  transform: translateZ(0);
   z-index: 30;
 }
 
