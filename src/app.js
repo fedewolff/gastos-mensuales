@@ -1,7 +1,6 @@
 import {
   EXPENSE_TYPES,
   MONTHLY_FIXED_STATUSES,
-  addCategory,
   addFixedExpense,
   addVariableExpense,
   amountInputValue,
@@ -9,7 +8,6 @@ import {
   dateForMonth,
   dateInputValue,
   deactivateFixedExpense,
-  deleteCategoryWithReassignment,
   deleteExpense,
   ensureMonthlyFixedForMonth,
   exportBackupJSON,
@@ -26,7 +24,6 @@ import {
   parseAmountToCents,
   payMonthlyFixedExpense,
   previousMonthKey,
-  renameCategory,
   setFixedExpenseActive,
   setMonthlyFixedPending,
   skipMonthlyFixedExpense,
@@ -166,6 +163,7 @@ function renderHome() {
 function renderSummary() {
   ensureMonth(ui.summaryMonthKey);
   const report = buildMonthlyReport(state, ui.summaryMonthKey);
+  const monthlyTrend = monthlyTrendData(ui.summaryMonthKey);
   const maxCategory = Math.max(1, ...report.categoryTotals.map((item) => item.amountCents));
 
   const categoryBars = report.categoryTotals.length
@@ -214,15 +212,14 @@ function renderSummary() {
       ${metric("Total del mes", formatARS(report.totalCents), comparisonText)}
       ${metric("Variables", formatARS(report.variableCents), "Gastos no fijos")}
       ${metric("Fijos pagados", formatARS(report.fixedPaidCents), `${report.fixed.paidCount} de ${report.fixed.total} fijos`)}
-      ${metric("Promedio diario", formatARS(report.dailyAverageCents), "Según fecha real")}
+    </section>
+    <section class="section card">
+      <h2>Evolución mensual</h2>
+      ${renderMonthlyLineChart(monthlyTrend)}
     </section>
     <section class="section card">
       <h2>Total por categoría</h2>
       <div class="bar-list">${categoryBars}</div>
-    </section>
-    <section class="section grid">
-      ${metric("Falta pagar", formatARS(report.fixed.pendingEstimatedCents), `${report.fixed.pendingCount} pendientes`)}
-      ${metric("Omitidos", String(report.fixed.skippedCount), "No cuentan en gastos")}
     </section>
     <section class="section">
       <h2>Top gastos</h2>
@@ -330,10 +327,6 @@ function renderSettings() {
               <div class="row__meta">${categoryUsage(category.id)} usos</div>
             </div>
           </div>
-          <div class="button-row">
-            <button class="button button--small button--secondary" type="button" data-edit-category="${category.id}">Editar</button>
-            <button class="button button--small button--danger" type="button" data-delete-category="${category.id}">Eliminar</button>
-          </div>
         </div>
       `
     )
@@ -376,10 +369,7 @@ function renderSettings() {
 
     <section class="section stack">
       <h2>Categorías</h2>
-      <form id="category-add-form" class="inline-form">
-        <input class="input" name="name" placeholder="Nueva categoría" required />
-        <button class="button button--secondary" type="submit">Crear</button>
-      </form>
+      <p class="muted">Las categorías se eligen desde selectores al cargar o editar gastos y fijos.</p>
       <div class="list">${categoryRows}</div>
     </section>
 
@@ -424,8 +414,6 @@ function renderMonthlyFixedRow(monthly) {
 function renderModal() {
   if (!ui.modal) return "";
   if (ui.modal.type === "expense") return renderExpenseModal(ui.modal.id);
-  if (ui.modal.type === "category") return renderCategoryModal(ui.modal.id);
-  if (ui.modal.type === "delete-category") return renderDeleteCategoryModal(ui.modal.id);
   if (ui.modal.type === "fixed") return renderFixedExpenseModal(ui.modal.id);
   if (ui.modal.type === "monthly-amount") return renderMonthlyAmountModal(ui.modal.id);
   return "";
@@ -456,46 +444,6 @@ function renderExpenseModal(expenseId) {
           <input class="input" name="date" type="date" value="${expense.date}" required />
         </label>
         <button class="button" type="submit">Guardar cambios</button>
-      </form>
-    `
-  );
-}
-
-function renderCategoryModal(categoryId) {
-  const category = findById(state.categories, categoryId);
-  if (!category) return "";
-
-  return modalShell(
-    "Editar categoría",
-    `
-      <form id="category-edit-form" class="stack">
-        <label class="field">
-          <span>Nombre</span>
-          <input class="input" name="name" value="${escapeHtml(category.name)}" required />
-        </label>
-        <button class="button" type="submit">Guardar categoría</button>
-      </form>
-    `
-  );
-}
-
-function renderDeleteCategoryModal(categoryId) {
-  const category = findById(state.categories, categoryId);
-  if (!category) return "";
-  const replacements = state.categories.filter((item) => item.id !== categoryId);
-
-  return modalShell(
-    "Eliminar categoría",
-    `
-      <form id="category-delete-form" class="stack">
-        <p class="danger-text">Los gastos y fijos de “${escapeHtml(category.name)}” se van a reasignar antes de eliminarla.</p>
-        <label class="field">
-          <span>Reasignar a</span>
-          <select class="select" name="replacementCategoryId" required>
-            ${replacements.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("")}
-          </select>
-        </label>
-        <button class="button button--danger" type="submit">Reasignar y eliminar</button>
       </form>
     `
   );
@@ -747,33 +695,6 @@ function bindSettingsEvents() {
     });
   });
 
-  document.querySelector("#category-add-form")?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    withError(() => {
-      const data = Object.fromEntries(new FormData(event.currentTarget));
-      addCategory(state, data.name);
-      persist("Categoría creada");
-    });
-  });
-
-  document.querySelectorAll("[data-edit-category]").forEach((button) => {
-    button.addEventListener("click", () => {
-      ui.modal = { type: "category", id: button.dataset.editCategory };
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-delete-category]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (state.categories.length <= 1) {
-        showToast("Necesitás al menos una categoría");
-        return;
-      }
-      ui.modal = { type: "delete-category", id: button.dataset.deleteCategory };
-      render();
-    });
-  });
-
   document.querySelectorAll("[data-open-fixed-modal]").forEach((button) => {
     button.addEventListener("click", () => {
       ui.modal = { type: "fixed", id: null };
@@ -812,26 +733,6 @@ function bindModalEvents() {
       });
       closeModal();
       persist("Gasto actualizado");
-    });
-  });
-
-  document.querySelector("#category-edit-form")?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    withError(() => {
-      const data = Object.fromEntries(new FormData(event.currentTarget));
-      renameCategory(state, ui.modal.id, data.name);
-      closeModal();
-      persist("Categoría actualizada");
-    });
-  });
-
-  document.querySelector("#category-delete-form")?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    withError(() => {
-      const data = Object.fromEntries(new FormData(event.currentTarget));
-      deleteCategoryWithReassignment(state, ui.modal.id, data.replacementCategoryId);
-      closeModal();
-      persist("Categoría eliminada");
     });
   });
 
@@ -911,6 +812,70 @@ function metric(label, value, hint = "") {
   `;
 }
 
+function monthlyTrendData(selectedMonthKey) {
+  const keys = [];
+  let key = selectedMonthKey;
+  for (let index = 0; index < 6; index += 1) {
+    keys.unshift(key);
+    key = previousMonthKey(key);
+  }
+
+  return keys.map((monthKey) => ({
+    monthKey,
+    label: shortMonthLabel(monthKey),
+    amountCents: buildMonthlyReport(state, monthKey).totalCents
+  }));
+}
+
+function renderMonthlyLineChart(data) {
+  const width = 320;
+  const height = 150;
+  const paddingX = 18;
+  const paddingY = 20;
+  const plotWidth = width - paddingX * 2;
+  const plotHeight = height - paddingY * 2;
+  const maxAmount = Math.max(1, ...data.map((item) => item.amountCents));
+  const step = plotWidth / Math.max(1, data.length - 1);
+  const points = data.map((item, index) => {
+    const x = paddingX + index * step;
+    const y = height - paddingY - (item.amountCents / maxAmount) * plotHeight;
+    return { ...item, x, y };
+  });
+  const path = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const area = `${paddingX},${height - paddingY} ${path} ${width - paddingX},${height - paddingY}`;
+
+  return `
+    <div class="line-chart">
+      <svg class="line-chart__svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolución mensual de gastos">
+        <line class="line-chart__axis" x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}"></line>
+        <polygon class="line-chart__area" points="${area}"></polygon>
+        <polyline class="line-chart__line" points="${path}"></polyline>
+        ${points
+          .map(
+            (point) => `
+              <circle class="line-chart__dot" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4">
+                <title>${escapeHtml(point.label)}: ${formatARS(point.amountCents)}</title>
+              </circle>
+            `
+          )
+          .join("")}
+      </svg>
+      <div class="line-chart__labels">
+        ${points
+          .map(
+            (point) => `
+              <div>
+                <span>${escapeHtml(point.label)}</span>
+                <strong>${formatARS(point.amountCents)}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
 function fixedMiniList(items) {
   if (!items.length) return `<div class="empty">Nada pendiente.</div>`;
   return items
@@ -963,6 +928,12 @@ function categoryUsage(categoryId) {
 
 function currentMonthKey() {
   return monthKeyFromDate(new Date());
+}
+
+function shortMonthLabel(monthKey) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const date = new Date(year, month - 1, 1);
+  return new Intl.DateTimeFormat("es-AR", { month: "short" }).format(date).replace(".", "");
 }
 
 function modalShell(title, body) {

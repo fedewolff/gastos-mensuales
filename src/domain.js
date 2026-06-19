@@ -514,7 +514,6 @@ export function buildMonthlyReport(state, monthKey, now = new Date()) {
     fixedPaidCents,
     categoryTotals,
     topExpenses: expenses.slice().sort((a, b) => b.amountCents - a.amountCents).slice(0, 5),
-    dailyAverageCents: Math.round(totalCents / Math.max(1, daysForAverage(monthKey, now))),
     fixed: {
       total: monthlyFixed.length,
       paidCount: fixedPaid.length,
@@ -722,15 +721,6 @@ function csvEscape(value) {
 
 function monthlyFixedUniqueKey(fixedExpenseId, monthKey) {
   return `${fixedExpenseId}:${monthKey}`;
-}
-
-function daysForAverage(monthKey, now) {
-  const currentMonth = monthKeyFromDate(now);
-  const [year, month] = monthKey.split("-").map(Number);
-  if (monthKey === currentMonth) {
-    return new Date(now).getDate();
-  }
-  return new Date(year, month, 0).getDate();
 }
 
 function sum(values) {
