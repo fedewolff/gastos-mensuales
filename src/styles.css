@@ -6,12 +6,12 @@
   --border: #363645;
   --text: #f7f7fb;
   --muted: #aaaabc;
-  --accent: #38bdf8;
-  --accent-strong: #0ea5e9;
-  --accent-rgb: 56, 189, 248;
+  --accent: #818cf8;
+  --accent-strong: #6366f1;
+  --accent-rgb: 129, 140, 248;
   --warning: #fbbf24;
   --danger: #f43f5e;
-  --info: #67e8f9;
+  --info: #c4b5fd;
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
@@ -356,7 +356,7 @@ h3 {
 
 .badge--paid {
   background: rgba(var(--accent-rgb), 0.16);
-  color: #7dd3fc;
+  color: #c4b5fd;
 }
 
 .badge--skipped {
