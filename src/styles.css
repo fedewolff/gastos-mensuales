@@ -12,6 +12,7 @@
   --warning: #fbbf24;
   --danger: #f43f5e;
   --info: #c4b5fd;
+  --tabbar-bottom-pull: 0px;
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
@@ -499,7 +500,7 @@ h3 {
 .tabbar {
   background: rgba(12, 12, 17, 0.94);
   border-top: 1px solid var(--border);
-  bottom: 0;
+  bottom: calc(-1 * var(--tabbar-bottom-pull));
   display: grid;
   gap: 4px;
   grid-template-columns: repeat(5, 1fr);
@@ -529,7 +530,7 @@ h3 {
 .toast {
   background: var(--text);
   border-radius: 8px;
-  bottom: 78px;
+  bottom: max(12px, calc(78px - var(--tabbar-bottom-pull)));
   box-shadow: var(--shadow);
   color: var(--bg);
   font-weight: 800;

@@ -31,8 +31,8 @@ import {
   updateExpense,
   updateFixedExpense,
   updateMonthlyFixedAmount
-} from "./domain.js?v=12";
-import { loadState, replaceState, restorePreviousState, saveState } from "./storage.js?v=12";
+} from "./domain.js?v=13";
+import { loadState, replaceState, restorePreviousState, saveState } from "./storage.js?v=13";
 
 let state = loadState();
 
@@ -68,6 +68,11 @@ const screenTitle = document.querySelector("#screen-title");
 const toast = document.querySelector("#toast");
 let toastTimer = null;
 
+syncViewportChromeGap();
+window.addEventListener("resize", syncViewportChromeGap);
+window.addEventListener("orientationchange", syncViewportChromeGap);
+window.visualViewport?.addEventListener("resize", syncViewportChromeGap);
+
 document.querySelectorAll("[data-nav]").forEach((button) => {
   button.addEventListener("click", () => {
     ui.view = button.dataset.nav;
@@ -78,6 +83,21 @@ document.querySelectorAll("[data-nav]").forEach((button) => {
 
 render();
 registerServiceWorker();
+
+function syncViewportChromeGap() {
+  const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true;
+  if (!isStandalone) {
+    document.documentElement.style.setProperty("--tabbar-bottom-pull", "0px");
+    return;
+  }
+
+  const screenHeight = Number(window.screen?.height) || window.innerHeight;
+  const viewportHeight = Number(window.visualViewport?.height) || window.innerHeight;
+  const rawGap = Math.max(0, Math.round(screenHeight - viewportHeight));
+  const pull = rawGap >= 20 ? Math.min(rawGap, 96) : 0;
+  document.documentElement.style.setProperty("--tabbar-bottom-pull", `${pull}px`);
+}
 
 function render() {
   document.querySelectorAll("[data-nav]").forEach((button) => {

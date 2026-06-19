@@ -1,4 +1,4 @@
-import { emptyState, seedState, upgradeState } from "./domain.js?v=12";
+import { emptyState, seedState, upgradeState } from "./domain.js?v=13";
 
 const STORAGE_KEY = "gastos-mensuales:data:v1";
 const LAST_GOOD_KEY = "gastos-mensuales:data:v1:last-good";
